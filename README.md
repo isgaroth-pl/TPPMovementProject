@@ -1,2 +1,2 @@
 # TPPMovementProject
-Coding adn testing couple of different TPP controllers for Unity
+Coding and testing couple of different TPP controllers for Unity
