@@ -33,31 +33,33 @@ namespace TPP_V2
         private void Update()
         {
             float delta = Time.deltaTime;
-
             inputHandler.TickInput(delta);
             moveDirection = cameraObject.forward * inputHandler.vertical;
             moveDirection += cameraObject.right * inputHandler.horizontal;
             moveDirection.Normalize();
-
-            float speed = movementSpeed;
-            moveDirection *= speed;
-
-            Vector3 projectedVelocity = Vector3.ProjectOnPlane(moveDirection, normalVector);
-            rigidbody.velocity = projectedVelocity;
-
+            moveDirection.y = 0f;
             animatorHandler.UpdateAnimatorValues(inputHandler.moveAmount, 0);
 
-            if(animatorHandler.canRotate)
-            {
-                HandleRotation(delta);
-            }
+        }
 
+        private void FixedUpdate()
+        {          
+            float speed = movementSpeed;
+            //moveDirection *= speed;
+
+            Vector3 projectedVelocity = Vector3.ProjectOnPlane(moveDirection, normalVector);
+            rigidbody.velocity = projectedVelocity.normalized * speed;// * Time.deltaTime;
+
+            if (animatorHandler.canRotate)
+            {
+                HandleRotation(Time.deltaTime);
+            }
         }
 
         #region Movement
 
         Vector3 normalVector;
-        Vector3 targetPosition;
+        //Vector3 targetPosition;
 
         private void HandleRotation(float delta)
         {
@@ -79,10 +81,7 @@ namespace TPP_V2
             Quaternion targetRotation = Quaternion.Slerp(myTransform.rotation, tr, rs * delta);
 
             myTransform.rotation = targetRotation;
-
         }
-
-
     #endregion
     }
 }

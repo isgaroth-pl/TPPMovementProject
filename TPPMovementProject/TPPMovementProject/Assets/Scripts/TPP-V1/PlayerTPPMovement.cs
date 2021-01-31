@@ -7,6 +7,7 @@ namespace TPP_V1
     public class PlayerTPPMovement : MonoBehaviour
     {
         public CharacterController controller;
+        public InputHandler inputHandler;
         public GroundSphereCheck groundCheck;
         public PlayerTPPMovementAnimationController animController;
         public Transform cam;   //use main camera - not TPPCamera 
@@ -56,6 +57,11 @@ namespace TPP_V1
         private float horizontal;
         private float vertical;
 
+        private void Awake()
+        {
+            inputHandler = GetComponent<InputHandler>();
+        }
+
         void Update()
         {
             GetPlayerInputAndState();
@@ -78,20 +84,26 @@ namespace TPP_V1
 
         private void GetPlayerInputAndState()
         {
-            //refactor to dependency inversion
-            isWalkPressed = Input.GetKeyDown(KeyCode.LeftAlt);
-            jumpPressed = Input.GetKeyDown(KeyCode.Space);
-            jumpReleased = Input.GetKeyUp(KeyCode.Space);
-            horizontal = Input.GetAxisRaw("Horizontal");
-            vertical = Input.GetAxisRaw("Vertical");
+            inputHandler.UpdateInput(Time.deltaTime);
+            isWalkPressed = inputHandler.walkPressed;
+            jumpPressed = inputHandler.jumpPressed;
+            jumpReleased = inputHandler.jumpReleased;
+            horizontal = inputHandler.horizontal;
+            vertical = inputHandler.vertical;
             isGrounded = groundCheck.IsGrounded;
             if (_fallTime > 0f)
                 isAboutToLand = groundCheck.AboutToLand;
             else
                 isAboutToLand = false;
 
-            if (isWalkPressed && !isInTheAir)
-                isWalkingOn = !isWalkingOn;
+            if (!isInTheAir)
+            {
+                if (isWalkPressed)
+                    isWalkingOn = true;
+                else
+                    isWalkingOn = false;
+            }
+
         }
 
         private void SetDesiredMoveDirectionVector(Vector3 inputVector)
@@ -137,11 +149,11 @@ namespace TPP_V1
 
         private void SetMaxMovementSpeed()
         {
-            if (isWalkingOn)
-                _maxMovementSpeed = _walkSpeed;
-            if (!isWalkingOn)
-                _maxMovementSpeed = _runSpeed;
-        }
+                if (isWalkingOn)
+                    _maxMovementSpeed = _walkSpeed;
+                if (!isWalkingOn)
+                    _maxMovementSpeed = _runSpeed;
+         }
 
         private void SetCurrentMovementSpeed(Vector3 inputVector)
         {
@@ -163,7 +175,7 @@ namespace TPP_V1
         {
             bool canDoubleJump = (jumpPressed && isInTheAir && airborneTimer > 0.2f && _fallTime < 0.1f && !_didDoubleJump);
             //if player wants to jump
-            if (jumpPressed && isGrounded && !isLanding)
+            if (jumpPressed && isGrounded && !isLanding && !isLaunching && verticalVelocityVector.y <= 0) 
             {
                 verticalVelocityVector.y = 0f;
                 _additionalJumpHeight = 0f;
